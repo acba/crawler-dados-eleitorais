@@ -1,0 +1,4 @@
+requests==2.22.0
+pandas==0.25.1
+ipython==7.8.0
+ipdb==0.12.2
