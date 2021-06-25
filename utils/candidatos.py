@@ -30,12 +30,12 @@ FIM_HEADER = [
 
 RECURSO = 'candidatos'
 
-def getCandidatos(eleicao, download_path, out_path= './data'):
+def getCandidatos(ano_eleicao, download_path, out_path= './data'):
     lista = []
 
-    print(f'# Processando candidatos das eleições de {eleicao}')
+    print(f'# Processando candidatos das eleições de {ano_eleicao}')
 
-    url = misc.gera_url(URL, FILE, eleicao)
+    url = misc.gera_url(URL, FILE, ano_eleicao)
     filename = url.split('/')[-1]
 
     misc.download_and_retry(url, download_path, filename)
@@ -45,17 +45,17 @@ def getCandidatos(eleicao, download_path, out_path= './data'):
 
         with zipfile.ZipFile(download_path + filename, 'r') as zip_ref:
             print(f'\t# Extraindo {filename}')
-            zip_ref.extractall(path=f'{download_path}/extracted/{RECURSO}/{eleicao}')
+            zip_ref.extractall(path=f'{download_path}/extracted/{RECURSO}/{ano_eleicao}')
 
         cabecalho = BASE_HEADER + FIM_HEADER
 
-        if eleicao == 2012:
+        if ano_eleicao == 2012:
             cabecalho = cabecalho + ['NM_EMAIL']
 
-        if eleicao >= 2014:
+        if ano_eleicao >= 2014:
             cabecalho = BASE_HEADER + ['CODIGO_COR_RACA', 'DESCRICAO_COR_RACA'] + FIM_HEADER + ['NM_EMAIL']
 
-        currentDirectory = pathlib.Path(f'{download_path}/extracted/{RECURSO}/{eleicao}')
+        currentDirectory = pathlib.Path(f'{download_path}/extracted/{RECURSO}/{ano_eleicao}')
         patterns = ['*.txt', '*.csv']
 
         files = []
@@ -65,7 +65,7 @@ def getCandidatos(eleicao, download_path, out_path= './data'):
 
         for file in sorted(files):
             print(f'\t\t# Carregando {file}')
-            if eleicao >= 2014:
+            if ano_eleicao >= 2014:
                 _resultado = pd.read_csv(file, sep=';', encoding='latin1', na_values=['#NULO#', '#NULO', '#NE#', '#NE'], dtype='object')
             else:
                 _resultado = pd.read_csv(file, sep=';', encoding='latin1', na_values=['#NULO#', '#NULO', '#NE#', '#NE'], names=cabecalho, dtype='object')
@@ -74,8 +74,8 @@ def getCandidatos(eleicao, download_path, out_path= './data'):
             lista.append(_resultado)
 
         # Deleta os arquivos extraidos
-        print(f'\t# Deletando diretorio {download_path}/extracted/{RECURSO}/{eleicao}\n')
-        shutil.rmtree(f'{download_path}/extracted/{RECURSO}/{eleicao}')
+        print(f'\t# Deletando diretorio {download_path}/extracted/{RECURSO}/{ano_eleicao}')
+        shutil.rmtree(f'{download_path}/extracted/{RECURSO}/{ano_eleicao}')
 
         resultado_eleicoes = pd.concat(lista, ignore_index=True)
 
@@ -84,8 +84,7 @@ def getCandidatos(eleicao, download_path, out_path= './data'):
         cabecalho_restantes = list(set(_ccompleto).difference(set(cabecalho)))
         resultado_eleicoes = pd.concat([resultado_eleicoes, pd.DataFrame(columns=cabecalho_restantes)], sort=False)
 
-        _path = f'{out_path}/{eleicao}'
-        if not os.path.exists(_path):
-            os.makedirs(_path)
+        misc.mkdir(f'{out_path}/{ano_eleicao}')
         
-        resultado_eleicoes.to_csv(f'{out_path}/{eleicao}/candidatos.csv', index=False, encoding='utf-8', sep='|')
+        print(f'\t# Escrevendo {out_path}/{ano_eleicao}/candidatos.csv\n')
+        resultado_eleicoes.to_csv(f'{out_path}/{ano_eleicao}/candidatos.csv', index=False, encoding='utf-8', sep='|')
