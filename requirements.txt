@@ -1,4 +1,4 @@
 requests==2.25.1
 pandas==1.2.5
-ipython==7.24.1
+ipython==7.31.1
 ipdb==0.13.9
